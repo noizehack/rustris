@@ -262,6 +262,7 @@ struct Game {
     last_board: [bool; 210],
     next_board: [bool; 210],
     piece: Piece,
+    piece_board: [bool; 210],
     frame_time: Duration,//should this be replaced with level? and then a match for time in loop?
     score: usize,
 }
@@ -270,51 +271,46 @@ impl Game {
         let duration: Duration = std::time::Duration::from_millis(millis);
         let mut rng = rand::thread_rng();
         let first_piece = Piece::new(rng.gen_range(0..7));
+        let first_piece_board = first_piece.get_placement();
         Game {
             last_board: [false; 210],
             next_board: [false; 210],
             piece: first_piece,
+            piece_board: first_piece_board,
             frame_time: duration,
             score: 0,
         }
     }
     //return true if there is a collision
     fn collides(&self) -> bool {
-        let piece_arr: [bool; 210] = self.piece.get_placement();
-        for i in self.last_board.iter().zip(piece_arr.iter()) {
-            if !*i.0 && !*i.1 {
+        for i in self.last_board.iter().zip(self.piece_board.iter()) {
+            if *i.0 && *i.1 {
                 return true;
             }
         }
         false
     }
     //check for a full row (checks last_board and updates next_board)
-    //note last_board can't include the current piece
     fn check_rows(&mut self) {
         let mut full: bool;
         let mut j: usize;
-        let mut full_rows: usize = 0;
-        for i in 0..20 {
+        for i in 0..21 {
             full = true;
             j = 0;
             while full && j < 10 {
-                if self.last_board[i * 10 + j] == ' ' {
-                    full = false;
-                }
+                full = self.last_board[i * 10 + j];
                 j += 1;
             }
             if full {
-                full_rows += 1;
-                self.score += 1;
+                self.score += 1; //TODO: add level score multiplier
+                for x in 0..10 {
+                    self.next_board[i * 10 + x] = self.last_board[(i + 1) * 10 + x];
+                }
+            } else {
+                for x in 0..10 {
+                    self.next_board[i * 10 + x] = self.last_board[i * 10 + x];
+                }
             }
-            for x in 0..10 {
-                let row_start: usize = (i + full_rows) * 10 ;
-                //TODO FINISH!!!
-            }
-        }
-        //remove rows in full_rows vec
-        for i in  {
-            
         }
     }
     //update game struct
@@ -325,12 +321,22 @@ impl Game {
     //note the piece needs to be overlaid on the board instead of being included
     fn render(&self) {
         //print new board
-        for i in 0..199 {
-            match (i + 1) % 10 {
-                0 => println!("{}", self.next_board[i]),
-                _ => print!("{}", self.next_board[i]),
-            };
+        //TODO: print piece on top of board
+        //TODO: clear console and set cursor to top left
+        println!(" ");
+        for i in (0..21).rev() {
+            for j in 0..10 {
+                let block: &str = if self.next_board[i * 10 + j] {"[]"} else {" ."};
+                match j {
+                    0 => print!("     <!{}", block),
+                    1..=8 => print!("{}", block),
+                    9 => print!("{}!>", block),
+                    _ => {},
+                };
+            }
         }
+        println!("     <!====================!>");
+        println!("       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
     }
     //move piece left
     fn move_left(&mut self) {
