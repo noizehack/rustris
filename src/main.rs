@@ -4,208 +4,212 @@ use rand::Rng;
 
 //piece struct
 struct Piece {
-    pos: usize,
+    x_pos: usize,
+    y_pos: usize,
     shape: usize,
     rotation: usize,
-    arr: [[[bool; 16]; 4]; 7],
+    arr: [[[[bool; 4]; 4]; 4]; 7],
 }
 impl Piece {
     fn new(s: usize) -> Piece {
         Piece {
-            pos: 3,
+            x_pos: 5,
+            y_pos: 0,
             rotation: 0,
             shape: s,
             arr: [
                 [
                     [
-                        false, false, false, false,
-                        true,  true,  true,  true,
-                        false, false, false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  true,  true],
+                        [false, false, false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, true,  false,
-                        false, false, true,  false,
-                        false, false, true,  false,
-                        false, false, true,  false
+                        [false, false, true,  false],
+                        [false, false, true,  false],
+                        [false, false, true,  false],
+                        [false, false, true,  false]
                     ],
                     [
-                        false, false, false, false,
-                        true,  true,  true,  true,
-                        false, false, false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  true,  true],
+                        [false, false, false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, true,  false,
-                        false, false, true,  false,
-                        false, false, true,  false,
-                        false, false, true,  false
+                        [false, false, true,  false],
+                        [false, false, true,  false],
+                        [false, false, true,  false],
+                        [false, false, true,  false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        true,  true,  true,  false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  true,  false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, true,  false, false,
-                        true,  true,  false, false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, true,  false, false],
+                        [true,  true,  false, false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, true,  false, false,
-                        true,  true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  false, false],
+                        [true,  true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, true,  false, false,
-                        false, true,  true,  false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, true,  false, false],
+                        [false, true,  true,  false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        true,  true,  true,  false,
-                        true,  false, false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  true,  false],
+                        [true,  false, false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        true,  true,  false, false,
-                        false, true,  false, false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [true,  true,  false, false],
+                        [false, true,  false, false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, false, true,  false,
-                        true,  true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, false, true,  false],
+                        [true,  true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, true,  false, false,
-                        false, true,  false, false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, true,  false, false],
+                        [false, true,  false, false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        true,  true,  true,  false,
-                        false, false, true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  true,  false],
+                        [false, false, true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, true,  false, false,
-                        false, true,  false, false,
-                        true,  true,  false, false,
-                        false, false, false, false
+                        [false, true,  false, false],
+                        [false, true,  false, false],
+                        [true,  true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        true,  false, false, false,
-                        true,  true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  false, false, false],
+                        [true,  true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, true,  true,  false,
-                        false, true,  false, false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, true,  true,  false],
+                        [false, true,  false, false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        true,  true,  false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [true,  true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        true,  false, false, false,
-                        true,  true,  false, false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [true,  false, false, false],
+                        [true,  true,  false, false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        true,  true,  false, false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [true,  true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        true,  false, false, false,
-                        true,  true,  false, false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [true,  false, false, false],
+                        [true,  true,  false, false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        true,  true,  false, false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  false, false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, true,  false,
-                        false, true,  true,  false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, false, true,  false],
+                        [false, true,  true,  false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        true,  true,  false, false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [true,  true,  false, false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, true,  false,
-                        false, true,  true,  false,
-                        false, true,  false, false,
-                        false, false, false, false
+                        [false, false, true,  false],
+                        [false, true,  true,  false],
+                        [false, true,  false, false],
+                        [false, false, false, false]
                     ]
                 ],
                 [
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ],
                     [
-                        false, false, false, false,
-                        false, true,  true,  false,
-                        false, true,  true,  false,
-                        false, false, false, false
+                        [false, false, false, false],
+                        [false, true,  true,  false],
+                        [false, true,  true,  false],
+                        [false, false, false, false]
                     ]
                 ]
             ],
         }
     }
     //return piece on empty board
-    fn get_placement(&self) -> [bool; 210] {
-        let mut board: [bool; 210] = [false; 210];
-        for i in 0..16 {
-            board[i + self.pos] = self.arr[self.shape][self.rotation][i];
+    fn get_placement(&self) -> [[bool; 14]; 23] {
+        let mut board: [[bool; 14]; 23] = [[false; 14]; 23];
+        for i in 0..4 {
+            for j in 0..4{
+                board[i + self.y_pos][j + self.x_pos] = self.arr[self.shape][self.rotation][i][j];
+            }
         }
         board
     }
@@ -259,10 +263,10 @@ impl Piece {
 }
 //game struct
 struct Game {
-    last_board: [bool; 210],
-    next_board: [bool; 210],
+    last_board: [[bool; 14]; 23],
+    next_board: [[bool; 14]; 23],
     piece: Piece,
-    piece_board: [bool; 210],
+    piece_board: [[bool; 14]; 23],
     frame_time: Duration,//should this be replaced with level? and then a match for time in loop?
     score: usize,
 }
@@ -273,8 +277,8 @@ impl Game {
         let first_piece = Piece::new(rng.gen_range(0..7));
         let first_piece_board = first_piece.get_placement();
         Game {
-            last_board: [false; 210],
-            next_board: [false; 210],
+            last_board: [[false; 14]; 23],
+            next_board: [[false; 14]; 23],
             piece: first_piece,
             piece_board: first_piece_board,
             frame_time: duration,
@@ -284,8 +288,10 @@ impl Game {
     //return true if there is a collision
     fn collides(&self) -> bool {
         for i in self.last_board.iter().zip(self.piece_board.iter()) {
-            if *i.0 && *i.1 {
-                return true;
+            for j in i.0.iter().zip(i.1) {
+                if *j.0 && *j.1 {
+                    return true;
+                }
             }
         }
         false
@@ -293,24 +299,20 @@ impl Game {
     //check for a full row (checks last_board and updates next_board)
     fn check_rows(&mut self) {
         let mut full: bool;
-        let mut j: usize;
-        for i in 0..21 {
+        let mut rows_removed: usize = 0;
+        let mut x: usize;
+        for y in (2..23).rev() {
             full = true;
-            j = 0;
-            while full && j < 10 {
-                full = self.last_board[i * 10 + j];
-                j += 1;
+            x = 2;
+            while full && x < 12 {
+                full = self.last_board[y][x];
+                x += 1;
             }
             if full {
                 self.score += 1; //TODO: add level score multiplier
-                for x in 0..10 {
-                    self.next_board[i * 10 + x] = self.last_board[(i + 1) * 10 + x];
-                }
-            } else {
-                for x in 0..10 {
-                    self.next_board[i * 10 + x] = self.last_board[i * 10 + x];
-                }
+                rows_removed += 1;
             }
+            self.next_board[y] = self.last_board[y - rows_removed];
         }
     }
     //update game struct
@@ -321,16 +323,15 @@ impl Game {
     //note the piece needs to be overlaid on the board instead of being included
     fn render(&self) {
         //print new board
-        //TODO: print piece on top of board
         //TODO: clear console and set cursor to top left
         println!(" ");
-        for i in (0..21).rev() {
-            for j in 0..10 {
-                let block: &str = if self.next_board[i * 10 + j] {"[]"} else {" ."};
-                match j {
-                    0 => print!("     <!{}", block),
-                    1..=8 => print!("{}", block),
-                    9 => print!("{}!>", block),
+        for y in (1..22).rev() {
+            for x in 2..12 {
+                let block: &str = if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
+                match x {
+                    2 => print!("     <!{}", block),
+                    3..=10 => print!("{}", block),
+                    11 => print!("{}!>", block),
                     _ => {},
                 };
             }
