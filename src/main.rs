@@ -2,6 +2,14 @@ use std::time::Duration;
 use std::thread::sleep;
 use rand::Rng;
 
+//movement directions
+enum Dir {
+    Left,
+    Right,
+    Down,
+    Rcw,
+    Rccw,
+}
 //piece struct
 struct Piece {
     x_pos: usize,
@@ -267,6 +275,7 @@ struct Game {
     next_board: [[bool; 14]; 23],
     piece: Piece,
     piece_board: [[bool; 14]; 23],
+    border_board: [[bool; 14]; 23],
     frame_time: Duration,//should this be replaced with level? and then a match for time in loop?
     score: usize,
 }
@@ -276,20 +285,26 @@ impl Game {
         let mut rng = rand::thread_rng();
         let first_piece = Piece::new(rng.gen_range(0..7));
         let first_piece_board = first_piece.get_placement();
+        let border: [[bool; 14]; 23];
+        for i in 0..21 { border[i] = [true, true, false, false, false, false, false, false, false, false, false, false, true, true] };
+        for i in 21..23 { border[i] = [true; 14] };
         Game {
             last_board: [[false; 14]; 23],
             next_board: [[false; 14]; 23],
             piece: first_piece,
             piece_board: first_piece_board,
+            border_board: border,
             frame_time: duration,
             score: 0,
         }
     }
     //return true if there is a collision
+    //NOTE: using last_board
     fn collides(&self) -> bool {
-        for i in self.last_board.iter().zip(self.piece_board.iter()) {
-            for j in i.0.iter().zip(i.1) {
-                if *j.0 && *j.1 {
+        for y in 0..23 {
+            for x in 0..14 {
+                //.
+                if (self.last_board[y][x] && self.piece_board[y][x]) || (self.piece_board[y][x] && self.border_board[y][x]) {
                     return true;
                 }
             }
@@ -302,22 +317,30 @@ impl Game {
         let mut rows_removed: usize = 0;
         let mut x: usize;
         for y in (2..23).rev() {
+            //check if row is full
             full = true;
             x = 2;
             while full && x < 12 {
                 full = self.last_board[y][x];
                 x += 1;
             }
+            //remove the row if it is full and move rows above down
             if full {
                 self.score += 1; //TODO: add level score multiplier
                 rows_removed += 1;
             }
-            self.next_board[y] = self.last_board[y - rows_removed];
+            if y - rows_removed > 0 {
+                self.next_board[y] = self.last_board[y - rows_removed];
+            } else {
+                self.next_board[y] = [false; 14];
+            }
         }
     }
     //update game struct
     fn update(&mut self) {
         //update to next frame
+        self.move_down();//TODO: move for user input down, shift for game down
+        self.last_board = self.next_board;
     }
     //print board to console
     //note the piece needs to be overlaid on the board instead of being included
@@ -341,7 +364,38 @@ impl Game {
     }
     //move piece left
     fn move_left(&mut self) {
-
+        //move piece
+        if self.piece.x_pos > 0 {
+            self.piece.x_pos -= 1;
+            self.piece_board = self.piece.get_placement();
+            //check for collision
+            //TODO: also check for going off edge of board
+            if self.collides() {
+                self.piece.x_pos += 1;
+            }
+            self.piece_board = self.piece.get_placement();
+        }
+    }
+    fn move_piece(&mut self, dir: Dir) {
+        let mut moved: bool = false;
+        match dir {
+            Dir::Left => if self.piece.x_pos > 0 {self.piece.x_pos -= 1} else {return},
+            Dir::Right => if self.piece.x_pos < 14 {self.piece.x_pos += 1} else {return},
+            Dir::Down => if self.piece.y_pos < 23 {self.piece.y_pos += 1} else {return},
+            Dir::Rcw => self.piece.rotation += 1,
+            Dir::Rccw => self.piece.rotation -= 1,
+        }
+        self.piece_board = self.piece.get_placement();
+        if self.collides() {
+            match dir {
+                Dir::Left => self.piece.x_pos += 1,
+                Dir::Right => self.piece.x_pos -= 1,
+                Dir::Down => self.piece.y_pos -= 1,
+                Dir::Rcw => self.piece.rotation -= 1,
+                Dir::Rccw => self.piece.rotation += 1,
+            }
+        }
+        self.piece_board = self.piece.get_placement();
     }
 }
 //main loop
