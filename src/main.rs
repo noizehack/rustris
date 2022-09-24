@@ -284,7 +284,7 @@ impl Game {
         let duration: Duration = std::time::Duration::from_millis(millis);
         let first_piece = Game::new_piece();
         let first_piece_board = first_piece.get_placement();
-        let border: [[bool; 14]; 23];
+        let mut border: [[bool; 14]; 23] = [[false; 14]; 23];
         for i in 0..21 { border[i] = [true, true, false, false, false, false, false, false, false, false, false, false, true, true] };
         for i in 21..23 { border[i] = [true; 14] };
         Game {
@@ -299,17 +299,14 @@ impl Game {
     }
     //make a new piece
     fn new_piece() -> Piece {
-        let mut rng = rand::thread_rng();
-        let piece = Piece::new(rng.gen_range(0..7));
-        piece
+        Piece::new(rand::thread_rng().gen_range(0..7))
     }
     //return true if there is a collision
     //NOTE: using last_board
     fn collides(&self) -> bool {
         for y in 0..23 {
             for x in 0..14 {
-                //.
-                if (self.last_board[y][x] && self.piece_board[y][x]) || (self.piece_board[y][x] && self.border_board[y][x]) {
+                if self.piece_board[y][x] && (self.last_board[y][x] || self.border_board[y][x]) {
                     return true;
                 }
             }
@@ -344,7 +341,7 @@ impl Game {
     //update game struct
     fn update(&mut self) {
         //update to next frame
-        self.move_down();//TODO: move for user input down, shift for game down
+        self.shift_down();
         self.last_board = self.next_board;
     }
     //print board to console
@@ -369,7 +366,6 @@ impl Game {
     }
     //move piece
     fn move_piece(&mut self, dir: Dir) {
-        let mut moved: bool = false;
         match dir {
             Dir::Left => if self.piece.x_pos > 0 {self.piece.x_pos -= 1} else {return},
             Dir::Right => if self.piece.x_pos < 14 {self.piece.x_pos += 1} else {return},
