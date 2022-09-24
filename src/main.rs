@@ -282,8 +282,7 @@ struct Game {
 impl Game {
     fn new(millis: u64) -> Game {
         let duration: Duration = std::time::Duration::from_millis(millis);
-        let mut rng = rand::thread_rng();
-        let first_piece = Piece::new(rng.gen_range(0..7));
+        let first_piece = Game::new_piece();
         let first_piece_board = first_piece.get_placement();
         let border: [[bool; 14]; 23];
         for i in 0..21 { border[i] = [true, true, false, false, false, false, false, false, false, false, false, false, true, true] };
@@ -297,6 +296,12 @@ impl Game {
             frame_time: duration,
             score: 0,
         }
+    }
+    //make a new piece
+    fn new_piece() -> Piece {
+        let mut rng = rand::thread_rng();
+        let piece = Piece::new(rng.gen_range(0..7));
+        piece
     }
     //return true if there is a collision
     //NOTE: using last_board
@@ -362,20 +367,7 @@ impl Game {
         println!("     <!====================!>");
         println!("       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
     }
-    //move piece left
-    fn move_left(&mut self) {
-        //move piece
-        if self.piece.x_pos > 0 {
-            self.piece.x_pos -= 1;
-            self.piece_board = self.piece.get_placement();
-            //check for collision
-            //TODO: also check for going off edge of board
-            if self.collides() {
-                self.piece.x_pos += 1;
-            }
-            self.piece_board = self.piece.get_placement();
-        }
-    }
+    //move piece
     fn move_piece(&mut self, dir: Dir) {
         let mut moved: bool = false;
         match dir {
@@ -396,6 +388,34 @@ impl Game {
             }
         }
         self.piece_board = self.piece.get_placement();
+    }
+    //shift piece down (for game tick movement, not player movement)
+    //NOTE: updates last_board
+    fn shift_down(&mut self) {
+        let mut end: bool = false;
+        if self.piece.y_pos < 23 {
+            self.piece.y_pos += 1;
+            self.piece_board = self.piece.get_placement();
+            if self.collides() {
+                end = true;
+                self.piece.y_pos -= 1;
+            }
+        } else {
+            end = true
+        }
+        //if piece is as far down as it can go put it in board and make new piece
+        if end {
+            self.piece_board = self.piece.get_placement();
+            for row in self.last_board.iter_mut().zip(self.piece_board.iter()) {
+                for cell in row.0.iter_mut().zip(row.1.iter()) {
+                    *cell.0 = *cell.0 || *cell.1;
+                }
+            }
+            //NOTE: is there supposed to be a 1 tick delay before the new piece shows up?
+            //if there is there needs to be a new state for that
+            self.piece = Game::new_piece();
+            self.piece_board = self.piece.get_placement();
+        }
     }
 }
 //main loop
