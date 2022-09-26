@@ -1,5 +1,13 @@
-use std::time::Duration;
+extern crate termion;
+
+use termion::{async_stdin, clear, cursor, style};
+use termion::raw::IntoRawMode;
+//use termion::event::Key;
+
+use std::io::{stdout, Read, Write};
+use std::time::{Instant, Duration};
 use std::thread::sleep;
+
 use rand::Rng;
 
 //movement directions
@@ -221,84 +229,137 @@ impl Piece {
         }
         board
     }
-    /*
-    //rotate cw
-    fn rotate_cw(&mut self) {
-        //TODO: add check for collision
-        //self.rotation = if self.rotation == 3 { 0 } else { self.rotation + 1 };
-        self.rotation = match self.rotation {
-            3 => 0,
-            _ => self.rotation + 1,
-        }
-    }
-    //rotate ccw
-    fn rotate_ccw(&mut self) {
-        //TODO: add check for collision
-        self.rotation = match self.rotation {
-            0 => 3,
-            _ => self.rotation - 1,
-        }
-    }
-    //move left
-    fn move_left(&mut self) {
-        //TODO: add check for collision
-        self.pos = match self.pos % 10 {
-            0 => self.pos,
-            _ => self.pos - 1,
-        }
-    }
-    //move right
-    fn move_right(&mut self) {
-        //TODO: add check for collision
-        self.pos = match self.pos % 10 {
-            9 => self.pos,
-            _ => self.pos + 1,
-        }
-    }
-    //move down
-    fn move_down(&mut self) {
-        //TODO: add check for collision
-        self.pos = match self.pos {
-            190 ..= 199 => self.pos,//call end in this case?
-            _ => self.pos + 10,
-        }
-    }
-    */
-    //drop
-        //while no collision move down
-    //end
-        //release struct and make a new one
 }
 //game struct
-struct Game {
+struct Game<R, W> {
     last_board: [[bool; 14]; 23],
     next_board: [[bool; 14]; 23],
     piece: Piece,
     piece_board: [[bool; 14]; 23],
     border_board: [[bool; 14]; 23],
-    frame_time: Duration,//should this be replaced with level? and then a match for time in loop?
+    speed: u64,
     score: usize,
+    running: bool,
+    stdin: R,
+    stdout: W,
 }
-impl Game {
-    fn new(millis: u64) -> Game {
-        let duration: Duration = std::time::Duration::from_millis(millis);
-        let first_piece = Game::new_piece();
-        let first_piece_board = first_piece.get_placement();
-        let mut border: [[bool; 14]; 23] = [[false; 14]; 23];
-        for i in 0..21 { border[i] = [true, true, false, false, false, false, false, false, false, false, false, false, true, true] };
-        for i in 21..23 { border[i] = [true; 14] };
-        Game {
-            last_board: [[false; 14]; 23],
-            next_board: [[false; 14]; 23],
-            piece: first_piece,
-            piece_board: first_piece_board,
-            border_board: border,
-            frame_time: duration,
-            score: 0,
+
+fn init() {
+    let stdout = stdout();
+    let mut stdout = stdout.lock().into_raw_mode().unwrap();
+    let stdin = async_stdin();
+
+    let mut game = Game {
+        last_board: [[false; 14]; 23],
+        next_board: [[false; 14]; 23],
+        //piece: Game::new_piece(),
+        piece: Piece::new(rand::thread_rng().gen_range(0..7)),
+        piece_board: [[false; 14]; 23],
+        border_board: [
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
+            [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true],
+            [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true]
+        ],
+        speed: 100,
+        score: 0,
+        running: true,
+        stdin: stdin,
+        stdout: stdout,
+    };
+    game.start();
+}
+
+impl<R: Read, W: Write> Game<R, W> {
+    //game loop
+    fn start(&mut self) {
+        write!(self.stdout, "{}", cursor::Hide).unwrap();
+        self.reset();
+        let mut before = Instant::now();
+
+        loop {
+            let interval = 1000 / self.speed;
+            let now = Instant::now();
+            let dt = (now.duration_since(before).subsec_nanos() / 1_000_000) as u64;
+
+            if dt < interval {
+                sleep(Duration::from_millis(interval - dt));
+                continue;
+            }
+
+            before = now;
+
+            if self.update() {
+                return;
+            }
+
+            self.shift_down();
+            self.check_rows();
+            self.last_board = self.next_board;
+
+            self.render();
+
+            write!(self.stdout, "{}", style::Reset).unwrap();
+            self.stdout.flush().unwrap();
         }
     }
+    
+    fn reset(&mut self) {
+        write!(self.stdout, "{}{}{}", clear::All, cursor::Goto(1, 1), style::Reset);
+        write!(self.stdout, "\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <! . . . . . . . . . .!>\r
+                    <!====================!>\r
+                      \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
+                \r
+                          SCORE: 0\n\r").unwrap();
+        //TODO: add stdout flush
+        self.score = 0;
+        self.last_board = [[false; 14]; 23];
+        self.next_board = [[false; 14]; 23];
+        self.running = true;
+        self.piece = self.new_piece();
+        self.piece_board = self.piece.get_placement();
+    }
     //make a new piece
-    fn new_piece() -> Piece {
+    fn new_piece(&self) -> Piece {
         Piece::new(rand::thread_rng().gen_range(0..7))
     }
     //return true if there is a collision
@@ -339,30 +400,64 @@ impl Game {
         }
     }
     //update game struct
-    fn update(&mut self) {
-        //update to next frame
-        self.shift_down();
-        self.last_board = self.next_board;
+    //returns false if game is over or true if it is not
+    fn update(&mut self) -> bool {
+        //get key input
+        let mut key_bytes = [0];
+        self.stdin.read(&mut key_bytes).unwrap();
+        match key_bytes[0] {
+            b'h' | b'a'               => self.move_piece(Dir::Left),
+            b'j' | b's'               => self.move_piece(Dir::Down),
+            b'k' | b'w' | b'e' | b'v' => self.move_piece(Dir::Rcw),
+            b'l' | b'd'               => self.move_piece(Dir::Right),
+            b'i' | b'q' | b'c'        => self.move_piece(Dir::Rccw),
+            _ => {},
+        };
+        /*
+        // Read a single byte from stdin.
+        let b = self.stdin.unwrap().unwrap();
+        use termion::event::Key::*;
+        match b {
+            Char('h') | Char('a') |                         Left  => self.move_piece(Dir::Left),
+            Char('j') | Char('s') |                         Down  => self.move_piece(Dir::Down),
+            Char('k') | Char('w') | Char('e') | Char('v') | Up    => self.move_piece(Dir::Rcw),
+            Char('l') | Char('d') |                         Right => self.move_piece(Dir::Right),
+            Char('i') | Char('q') | Char('c')                     => self.move_piece(Dir::Rccw),
+            _ => {},
+        };
+        */
+            
+        !self.collides()
     }
     //print board to console
-    //note the piece needs to be overlaid on the board instead of being included
-    fn render(&self) {
+    fn render(&mut self) {
         //print new board
-        //TODO: clear console and set cursor to top left
-        println!(" ");
+        //print!("\x1B[2J\x1B[1;1H");
+        write!(self.stdout, "{}", termion::cursor::Goto(2, 1)).unwrap();
         for y in (1..22).rev() {
             for x in 2..12 {
                 let block: &str = if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
+                let goto_y: u16 = (y + 1) as u16;
+                let goto_x: u16 = (x * 2 + 7) as u16;
                 match x {
-                    2 => print!("     <!{}", block),
-                    3..=10 => print!("{}", block),
-                    11 => print!("{}!>", block),
+                    2 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_y, goto_x), block).unwrap(),
+                    3..=11 => write!(self.stdout, "{}", block).unwrap(),
                     _ => {},
                 };
             }
         }
-        println!("     <!====================!>");
+        /*
+        if self.running {
+            println!("     <!====================!>");
+        } else {
+            println!("     <!=====GAME==OVER=====!>");
+        }
         println!("       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
+        println!(" ");
+        println!("            SCORE: {}", self.score);
+        */
+        write!(self.stdout, "{}{}", termion::cursor::Goto(25, 18), self.score).unwrap();
+        self.stdout.flush().unwrap();
     }
     //move piece
     fn move_piece(&mut self, dir: Dir) {
@@ -409,19 +504,13 @@ impl Game {
             }
             //NOTE: is there supposed to be a 1 tick delay before the new piece shows up?
             //if there is there needs to be a new state for that
-            self.piece = Game::new_piece();
+            self.piece = Piece::new(rand::thread_rng().gen_range(0..7));
             self.piece_board = self.piece.get_placement();
         }
     }
 }
 //main loop
 fn main() {
-    let mut game = Game::new(100);
-    let mut running = true;
-    while running {
-        game.update();
-        game.render();
-        sleep(game.frame_time);
-    };
+    init();
 }
 
