@@ -280,7 +280,7 @@ fn init() {
             [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true],
             [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true]
         ],
-        speed: 100,
+        speed: 10,
         score: 0,
         running: true,
         stdin: stdin,
@@ -299,7 +299,7 @@ impl<R: Read, W: Write> Game<R, W> {
         loop {
             let interval = 1000 / self.speed;
             let now = Instant::now();
-            let dt = (now.duration_since(before).subsec_nanos() / 1_000_000) as u64;
+            let dt = (now.duration_since(before).subsec_millis()) as u64;
 
             if dt < interval {
                 sleep(Duration::from_millis(interval - dt));
@@ -308,10 +308,10 @@ impl<R: Read, W: Write> Game<R, W> {
 
             before = now;
 
-            if self.update() {
+            if !self.update() {
                 return;
             }
-
+            
             self.shift_down();
             self.check_rows();
             self.last_board = self.next_board;
@@ -324,32 +324,32 @@ impl<R: Read, W: Write> Game<R, W> {
     }
     
     fn reset(&mut self) {
-        write!(self.stdout, "{}{}{}", clear::All, cursor::Goto(1, 1), style::Reset);
+        write!(self.stdout, "{}{}{}", clear::All, cursor::Goto(1, 1), style::Reset).unwrap();
         write!(self.stdout, "\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <! . . . . . . . . . .!>\r
-                    <!====================!>\r
-                      \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
-                \r
-                          SCORE: 0\n\r").unwrap();
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>\r
+     <!====================!>\r
+       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
+\r
+          SCORE: 0\n\r").unwrap();
         //TODO: add stdout flush
         self.score = 0;
         self.last_board = [[false; 14]; 23];
@@ -411,6 +411,7 @@ impl<R: Read, W: Write> Game<R, W> {
             b'k' | b'w' | b'e' | b'v' => self.move_piece(Dir::Rcw),
             b'l' | b'd'               => self.move_piece(Dir::Right),
             b'i' | b'q' | b'c'        => self.move_piece(Dir::Rccw),
+            b't'                      => return false,
             _ => {},
         };
         /*
@@ -433,14 +434,14 @@ impl<R: Read, W: Write> Game<R, W> {
     fn render(&mut self) {
         //print new board
         //print!("\x1B[2J\x1B[1;1H");
-        write!(self.stdout, "{}", termion::cursor::Goto(2, 1)).unwrap();
-        for y in (1..22).rev() {
+        write!(self.stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
+        for y in (1..21).rev() {
             for x in 2..12 {
                 let block: &str = if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
                 let goto_y: u16 = (y + 1) as u16;
-                let goto_x: u16 = (x * 2 + 7) as u16;
+                let goto_x: u16 = ((x - 2) * 2 + 8) as u16;
                 match x {
-                    2 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_y, goto_x), block).unwrap(),
+                    2 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_x, goto_y), block).unwrap(),
                     3..=11 => write!(self.stdout, "{}", block).unwrap(),
                     _ => {},
                 };
@@ -456,17 +457,17 @@ impl<R: Read, W: Write> Game<R, W> {
         println!(" ");
         println!("            SCORE: {}", self.score);
         */
-        write!(self.stdout, "{}{}", termion::cursor::Goto(25, 18), self.score).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(18, 25), self.score).unwrap();
         self.stdout.flush().unwrap();
     }
     //move piece
     fn move_piece(&mut self, dir: Dir) {
         match dir {
-            Dir::Left => if self.piece.x_pos > 0 {self.piece.x_pos -= 1} else {return},
-            Dir::Right => if self.piece.x_pos < 14 {self.piece.x_pos += 1} else {return},
-            Dir::Down => if self.piece.y_pos < 23 {self.piece.y_pos += 1} else {return},
-            Dir::Rcw => self.piece.rotation += 1,
-            Dir::Rccw => self.piece.rotation -= 1,
+            Dir::Left => if self.piece.x_pos > 1 {self.piece.x_pos -= 1} else {return},
+            Dir::Right => if self.piece.x_pos < 13 {self.piece.x_pos += 1} else {return},
+            Dir::Down => if self.piece.y_pos < 22 {self.piece.y_pos += 1} else {return},
+            Dir::Rcw => if (self.piece.rotation < 3) {self.piece.rotation += 1} else {self.piece.rotation = 0},
+            Dir::Rccw => if (self.piece.rotation > 0) {self.piece.rotation -= 1} else {self.piece.rotation = 3},
         }
         self.piece_board = self.piece.get_placement();
         if self.collides() {
@@ -474,8 +475,8 @@ impl<R: Read, W: Write> Game<R, W> {
                 Dir::Left => self.piece.x_pos += 1,
                 Dir::Right => self.piece.x_pos -= 1,
                 Dir::Down => self.piece.y_pos -= 1,
-                Dir::Rcw => self.piece.rotation -= 1,
-                Dir::Rccw => self.piece.rotation += 1,
+                Dir::Rcw => if (self.piece.rotation > 0) {self.piece.rotation -= 1} else {self.piece.rotation = 3},
+                Dir::Rccw => if (self.piece.rotation < 3) {self.piece.rotation += 1} else {self.piece.rotation = 0},
             }
         }
         self.piece_board = self.piece.get_placement();
@@ -484,7 +485,7 @@ impl<R: Read, W: Write> Game<R, W> {
     //NOTE: updates last_board
     fn shift_down(&mut self) {
         let mut end: bool = false;
-        if self.piece.y_pos < 23 {
+        if self.piece.y_pos < 22 {
             self.piece.y_pos += 1;
             self.piece_board = self.piece.get_placement();
             if self.collides() {
