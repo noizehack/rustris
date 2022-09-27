@@ -320,12 +320,21 @@ impl<R: Read, W: Write> Game<R, W> {
             }
 
             if !self.update() {
+                //TODO: add game over message here
+                self.render();
+                let stars = "**************";
+                let stars2 = "*            *";
+                let gameover = "* GAME  OVER *";
+                write!(self.stdout, "{}{}", cursor::Goto(11, 9), stars).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(11, 10), stars2).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(11, 11), gameover).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(11, 12), stars2).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(11, 13), stars).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(1, 28), cursor::Show).unwrap();
                 return;
             }
             
             self.check_rows();
-            self.last_board = self.next_board;
-
             self.render();
 
             write!(self.stdout, "{}", style::Reset).unwrap();
@@ -429,6 +438,8 @@ impl<R: Read, W: Write> Game<R, W> {
     }
     //print board to console
     fn render(&mut self) {
+        //update board
+        self.last_board = self.next_board;
         //print new board
         write!(self.stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
         for y in (1..21).rev() {
