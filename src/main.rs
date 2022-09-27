@@ -29,7 +29,7 @@ struct Piece {
 impl Piece {
     fn new(s: usize) -> Piece {
         Piece {
-            x_pos: 5,
+            x_pos: 6,
             y_pos: 0,
             rotation: 0,
             shape: s,
@@ -220,8 +220,8 @@ impl Piece {
         }
     }
     //return piece on empty board
-    fn get_placement(&self) -> [[bool; 14]; 23] {
-        let mut board: [[bool; 14]; 23] = [[false; 14]; 23];
+    fn get_placement(&self) -> [[bool; 16]; 24] {
+        let mut board: [[bool; 16]; 24] = [[false; 16]; 24];
         for i in 0..4 {
             for j in 0..4{
                 board[i + self.y_pos][j + self.x_pos] = self.arr[self.shape][self.rotation][i][j];
@@ -232,11 +232,11 @@ impl Piece {
 }
 //game struct
 struct Game<R, W> {
-    last_board: [[bool; 14]; 23],
-    next_board: [[bool; 14]; 23],
+    last_board: [[bool; 16]; 24],
+    next_board: [[bool; 16]; 24],
     piece: Piece,
-    piece_board: [[bool; 14]; 23],
-    border_board: [[bool; 14]; 23],
+    piece_board: [[bool; 16]; 24],
+    border_board: [[bool; 16]; 24],
     speed: u64,
     score: usize,
     running: bool,
@@ -250,37 +250,38 @@ fn init() {
     let stdin = async_stdin();
 
     let mut game = Game {
-        last_board: [[false; 14]; 23],
-        next_board: [[false; 14]; 23],
+        last_board: [[false; 16]; 24],
+        next_board: [[false; 16]; 24],
         //piece: Game::new_piece(),
         piece: Piece::new(rand::thread_rng().gen_range(0..7)),
-        piece_board: [[false; 14]; 23],
+        piece_board: [[false; 16]; 24],
         border_board: [
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true, false, false, false, false, false, false, false, false, false, false, true, true],
-            [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true],
-            [true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true]
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
+            [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true],
+            [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true],
+            [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true]
         ],
-        speed: 10,
+        speed: 5,
         score: 0,
         running: true,
         stdin: stdin,
@@ -352,8 +353,8 @@ impl<R: Read, W: Write> Game<R, W> {
           SCORE: 0\n\r").unwrap();
         //TODO: add stdout flush
         self.score = 0;
-        self.last_board = [[false; 14]; 23];
-        self.next_board = [[false; 14]; 23];
+        self.last_board = [[false; 16]; 24];
+        self.next_board = [[false; 16]; 24];
         self.running = true;
         self.piece = self.new_piece();
         self.piece_board = self.piece.get_placement();
@@ -365,8 +366,8 @@ impl<R: Read, W: Write> Game<R, W> {
     //return true if there is a collision
     //NOTE: using last_board
     fn collides(&self) -> bool {
-        for y in 0..23 {
-            for x in 0..14 {
+        for y in 0..24 {
+            for x in 0..16 {
                 if self.piece_board[y][x] && (self.last_board[y][x] || self.border_board[y][x]) {
                     return true;
                 }
@@ -379,11 +380,11 @@ impl<R: Read, W: Write> Game<R, W> {
         let mut full: bool;
         let mut rows_removed: usize = 0;
         let mut x: usize;
-        for y in (2..23).rev() {
+        for y in (1..21).rev() {
             //check if row is full
             full = true;
-            x = 2;
-            while full && x < 12 {
+            x = 3;
+            while full && x < 13 {
                 full = self.last_board[y][x];
                 x += 1;
             }
@@ -392,10 +393,10 @@ impl<R: Read, W: Write> Game<R, W> {
                 self.score += 1; //TODO: add level score multiplier
                 rows_removed += 1;
             }
-            if y - rows_removed > 0 {
+            if y >= rows_removed {
                 self.next_board[y] = self.last_board[y - rows_removed];
             } else {
-                self.next_board[y] = [false; 14];
+                self.next_board[y] = [false; 16];
             }
         }
     }
@@ -414,35 +415,21 @@ impl<R: Read, W: Write> Game<R, W> {
             b't'                      => return false,
             _ => {},
         };
-        /*
-        // Read a single byte from stdin.
-        let b = self.stdin.unwrap().unwrap();
-        use termion::event::Key::*;
-        match b {
-            Char('h') | Char('a') |                         Left  => self.move_piece(Dir::Left),
-            Char('j') | Char('s') |                         Down  => self.move_piece(Dir::Down),
-            Char('k') | Char('w') | Char('e') | Char('v') | Up    => self.move_piece(Dir::Rcw),
-            Char('l') | Char('d') |                         Right => self.move_piece(Dir::Right),
-            Char('i') | Char('q') | Char('c')                     => self.move_piece(Dir::Rccw),
-            _ => {},
-        };
-        */
             
         !self.collides()
     }
     //print board to console
     fn render(&mut self) {
         //print new board
-        //print!("\x1B[2J\x1B[1;1H");
         write!(self.stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
         for y in (1..21).rev() {
-            for x in 2..12 {
+            for x in 3..13 {
                 let block: &str = if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
                 let goto_y: u16 = (y + 1) as u16;
-                let goto_x: u16 = ((x - 2) * 2 + 8) as u16;
+                let goto_x: u16 = ((x - 3) * 2 + 8) as u16;
                 match x {
-                    2 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_x, goto_y), block).unwrap(),
-                    3..=11 => write!(self.stdout, "{}", block).unwrap(),
+                    3 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_x, goto_y), block).unwrap(),
+                    4..=12 => write!(self.stdout, "{}", block).unwrap(),
                     _ => {},
                 };
             }
@@ -464,8 +451,8 @@ impl<R: Read, W: Write> Game<R, W> {
     fn move_piece(&mut self, dir: Dir) {
         match dir {
             Dir::Left => if self.piece.x_pos > 1 {self.piece.x_pos -= 1} else {return},
-            Dir::Right => if self.piece.x_pos < 13 {self.piece.x_pos += 1} else {return},
-            Dir::Down => if self.piece.y_pos < 22 {self.piece.y_pos += 1} else {return},
+            Dir::Right => if self.piece.x_pos < 15 {self.piece.x_pos += 1} else {return},
+            Dir::Down => if self.piece.y_pos < 23 {self.piece.y_pos += 1} else {return},
             Dir::Rcw => if (self.piece.rotation < 3) {self.piece.rotation += 1} else {self.piece.rotation = 0},
             Dir::Rccw => if (self.piece.rotation > 0) {self.piece.rotation -= 1} else {self.piece.rotation = 3},
         }
@@ -485,7 +472,7 @@ impl<R: Read, W: Write> Game<R, W> {
     //NOTE: updates last_board
     fn shift_down(&mut self) {
         let mut end: bool = false;
-        if self.piece.y_pos < 22 {
+        if self.piece.y_pos < 23 {
             self.piece.y_pos += 1;
             self.piece_board = self.piece.get_placement();
             if self.collides() {
