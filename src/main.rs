@@ -237,7 +237,9 @@ struct Game<R, W> {
     piece: Piece,
     piece_board: [[bool; 16]; 24],
     border_board: [[bool; 16]; 24],
-    speed: u64,
+    frame_time: u64,
+    frames_till_drop: usize,
+    level: usize,
     score: usize,
     running: bool,
     stdin: R,
@@ -281,7 +283,9 @@ fn init() {
             [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true],
             [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true]
         ],
-        speed: 5,
+        frame_time: 16,
+        frames_till_drop: 48,
+        level: 0,
         score: 0,
         running: true,
         stdin: stdin,
@@ -298,22 +302,27 @@ impl<R: Read, W: Write> Game<R, W> {
         let mut before = Instant::now();
 
         loop {
-            let interval = 1000 / self.speed;
             let now = Instant::now();
             let dt = (now.duration_since(before).subsec_millis()) as u64;
 
-            if dt < interval {
-                sleep(Duration::from_millis(interval - dt));
+            if dt < self.frame_time {
+                sleep(Duration::from_millis(self.frame_time - dt));
                 continue;
             }
 
             before = now;
+            
+            if self.frames_till_drop == 0 {
+                self.shift_down();
+                self.frames_till_drop = 48;
+            } else {
+                self.frames_till_drop -= 1;
+            }
 
             if !self.update() {
                 return;
             }
             
-            self.shift_down();
             self.check_rows();
             self.last_board = self.next_board;
 
@@ -434,16 +443,6 @@ impl<R: Read, W: Write> Game<R, W> {
                 };
             }
         }
-        /*
-        if self.running {
-            println!("     <!====================!>");
-        } else {
-            println!("     <!=====GAME==OVER=====!>");
-        }
-        println!("       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
-        println!(" ");
-        println!("            SCORE: {}", self.score);
-        */
         write!(self.stdout, "{}{}", termion::cursor::Goto(18, 25), self.score).unwrap();
         self.stdout.flush().unwrap();
     }
@@ -453,8 +452,8 @@ impl<R: Read, W: Write> Game<R, W> {
             Dir::Left => if self.piece.x_pos > 1 {self.piece.x_pos -= 1} else {return},
             Dir::Right => if self.piece.x_pos < 15 {self.piece.x_pos += 1} else {return},
             Dir::Down => if self.piece.y_pos < 23 {self.piece.y_pos += 1} else {return},
-            Dir::Rcw => if (self.piece.rotation < 3) {self.piece.rotation += 1} else {self.piece.rotation = 0},
-            Dir::Rccw => if (self.piece.rotation > 0) {self.piece.rotation -= 1} else {self.piece.rotation = 3},
+            Dir::Rcw => if self.piece.rotation < 3 {self.piece.rotation += 1} else {self.piece.rotation = 0},
+            Dir::Rccw => if self.piece.rotation > 0 {self.piece.rotation -= 1} else {self.piece.rotation = 3},
         }
         self.piece_board = self.piece.get_placement();
         if self.collides() {
@@ -462,8 +461,8 @@ impl<R: Read, W: Write> Game<R, W> {
                 Dir::Left => self.piece.x_pos += 1,
                 Dir::Right => self.piece.x_pos -= 1,
                 Dir::Down => self.piece.y_pos -= 1,
-                Dir::Rcw => if (self.piece.rotation > 0) {self.piece.rotation -= 1} else {self.piece.rotation = 3},
-                Dir::Rccw => if (self.piece.rotation < 3) {self.piece.rotation += 1} else {self.piece.rotation = 0},
+                Dir::Rcw => if self.piece.rotation > 0 {self.piece.rotation -= 1} else {self.piece.rotation = 3},
+                Dir::Rccw => if self.piece.rotation < 3 {self.piece.rotation += 1} else {self.piece.rotation = 0},
             }
         }
         self.piece_board = self.piece.get_placement();
