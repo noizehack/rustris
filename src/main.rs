@@ -284,6 +284,7 @@ fn init() {
             [true, true, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, true, true, true]
         ],
         frame_time: 16,
+        //TODO: make this dependent on start level instead of hardcoding level 0
         frames_till_drop: 48,
         level: 0,
         score: 0,
@@ -314,7 +315,23 @@ impl<R: Read, W: Write> Game<R, W> {
             
             if self.frames_till_drop == 0 {
                 self.shift_down();
-                self.frames_till_drop = 48;
+                self.frames_till_drop = match self.level {
+                    0 => 48,
+                    1 => 43,
+                    2 => 38,
+                    3 => 33,
+                    4 => 28,
+                    5 => 23,
+                    6 => 18,
+                    7 => 13,
+                    8 => 8,
+                    9 => 6,
+                    10..=12 => 5,
+                    13..=15 => 4,
+                    16..=18 => 3,
+                    19..=28 => 2,
+                    _ => 1,
+                };
             } else {
                 self.frames_till_drop -= 1;
             }
@@ -368,7 +385,8 @@ impl<R: Read, W: Write> Game<R, W> {
      <!====================!>\r
        \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
 \r
-          SCORE: 0\n\r").unwrap();
+          SCORE: 0\r
+          LEVEL: 0\n\r").unwrap();
         //TODO: add stdout flush
         self.score = 0;
         self.last_board = [[false; 16]; 24];
@@ -409,6 +427,7 @@ impl<R: Read, W: Write> Game<R, W> {
             //remove the row if it is full and move rows above down
             if full {
                 self.score += 1; //TODO: add level score multiplier
+                self.level = self.score / 10;
                 rows_removed += 1;
             }
             if y >= rows_removed {
@@ -455,6 +474,7 @@ impl<R: Read, W: Write> Game<R, W> {
             }
         }
         write!(self.stdout, "{}{}", termion::cursor::Goto(18, 25), self.score).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(18, 26), self.level).unwrap();
         self.stdout.flush().unwrap();
     }
     //move piece
