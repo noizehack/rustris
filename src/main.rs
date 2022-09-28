@@ -341,7 +341,6 @@ impl<R: Read, W: Write> Game<R, W> {
             }
 
             if !self.update() {
-                //TODO: add game over message here
                 self.render();
                 let stars = "**************";
                 let stars2 = "*            *";
@@ -391,7 +390,7 @@ impl<R: Read, W: Write> Game<R, W> {
 \r
 \r
 \n\r").unwrap();
-        //TODO: add stdout flush
+        self.stdout.flush().unwrap();
         self.score = 0;
         self.rows = 0;
         self.last_board = [[false; 16]; 24];
@@ -434,10 +433,12 @@ impl<R: Read, W: Write> Game<R, W> {
     }
     //check for a full row (checks last_board and updates next_board)
     fn check_rows(&mut self) {
+        //check for full rows
         let mut full: bool;
         let mut rows_removed: usize = 0;
         let mut x: usize;
-        for y in (1..21).rev() {
+        let mut remove: [bool; 21] = [false; 21];
+        for y in 0..21 {
             //check if row is full
             full = true;
             x = 3;
@@ -447,16 +448,26 @@ impl<R: Read, W: Write> Game<R, W> {
             }
             //remove the row if it is full and move rows above down
             if full {
-                self.rows += 1; //TODO: add level score multiplier
-                self.level = self.rows / 10;
+                self.rows += 1;
                 rows_removed += 1;
-            }
-            if y >= rows_removed {
-                self.next_board[y] = self.last_board[y - rows_removed];
-            } else {
-                self.next_board[y] = [false; 16];
+                remove[y] = true;
             }
         }
+        //remove full rows
+        if rows_removed > 0 {
+            self.next_board = [[false; 16]; 24];
+            let mut i: usize = 20;
+            for y in (0..21).rev() {
+                if !remove[y] {
+                    self.next_board[i] = self.last_board[y];
+                    i -= 1;
+                }
+            }
+        } else {
+            self.next_board = self.last_board;
+        }
+        //calculate new level and score
+        self.level = self.rows / 10;
         match rows_removed {
             1 => self.score += (self.level + 1) * 40,
             2 => self.score += (self.level + 1) * 100,
