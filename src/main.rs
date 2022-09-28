@@ -241,6 +241,7 @@ struct Game<R, W> {
     frame_time: u64,
     frames_till_drop: usize,
     level: usize,
+    rows: usize,
     score: usize,
     running: bool,
     stdin: R,
@@ -289,6 +290,7 @@ fn init() {
         //TODO: make this dependent on start level instead of hardcoding level 0
         frames_till_drop: 48,
         level: 0,
+        rows: 0,
         score: 0,
         running: true,
         stdin: stdin,
@@ -391,6 +393,7 @@ impl<R: Read, W: Write> Game<R, W> {
 \n\r").unwrap();
         //TODO: add stdout flush
         self.score = 0;
+        self.rows = 0;
         self.last_board = [[false; 16]; 24];
         self.next_board = [[false; 16]; 24];
         self.running = true;
@@ -444,8 +447,8 @@ impl<R: Read, W: Write> Game<R, W> {
             }
             //remove the row if it is full and move rows above down
             if full {
-                self.score += 1; //TODO: add level score multiplier
-                self.level = self.score / 10;
+                self.rows += 1; //TODO: add level score multiplier
+                self.level = self.rows / 10;
                 rows_removed += 1;
             }
             if y >= rows_removed {
@@ -453,6 +456,13 @@ impl<R: Read, W: Write> Game<R, W> {
             } else {
                 self.next_board[y] = [false; 16];
             }
+        }
+        match rows_removed {
+            1 => self.score += (self.level + 1) * 40,
+            2 => self.score += (self.level + 1) * 100,
+            3 => self.score += (self.level + 1) * 300,
+            4 => self.score += (self.level + 1) * 1200,
+            _ => {},
         }
     }
     //update game struct
@@ -491,8 +501,9 @@ impl<R: Read, W: Write> Game<R, W> {
                 };
             }
         }
-        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 4), self.score).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 4), self.rows).unwrap();
         write!(self.stdout, "{}{}", termion::cursor::Goto(42, 5), self.level).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 6), self.score).unwrap();
         self.stdout.flush().unwrap();
     }
     //print next piece
