@@ -506,13 +506,6 @@ impl<R: Read, W: Write> Game<R, W> {
         write!(self.stdout, "{}{}", termion::cursor::Goto(42, 6), self.score).unwrap();
         self.stdout.flush().unwrap();
     }
-    //print next piece
-    fn render_next_piece(&self) {
-        //TODO: print next piece under next piece to right of board
-        //add que for next piece shape number and make new pieces from that instead of random
-        //maybe update new_piece function to do this
-        //use this render function when a new piece is created
-    }
     //move piece
     fn move_piece(&mut self, dir: Dir) {
         match dir {
