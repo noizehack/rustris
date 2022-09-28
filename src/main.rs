@@ -235,6 +235,7 @@ struct Game<R, W> {
     last_board: [[bool; 16]; 24],
     next_board: [[bool; 16]; 24],
     piece: Piece,
+    next_piece: usize,
     piece_board: [[bool; 16]; 24],
     border_board: [[bool; 16]; 24],
     frame_time: u64,
@@ -256,6 +257,7 @@ fn init() {
         next_board: [[false; 16]; 24],
         //piece: Game::new_piece(),
         piece: Piece::new(rand::thread_rng().gen_range(0..7)),
+        next_piece: rand::thread_rng().gen_range(0..7),
         piece_board: [[false; 16]; 24],
         border_board: [
             [true, true, true, false, false, false, false, false, false, false, false, false, false, true, true, true],
@@ -316,21 +318,21 @@ impl<R: Read, W: Write> Game<R, W> {
             if self.frames_till_drop == 0 {
                 self.shift_down();
                 self.frames_till_drop = match self.level {
-                    0 => 48,
-                    1 => 43,
-                    2 => 38,
-                    3 => 33,
-                    4 => 28,
-                    5 => 23,
-                    6 => 18,
-                    7 => 13,
-                    8 => 8,
-                    9 => 6,
+                    0       => 48,
+                    1       => 43,
+                    2       => 38,
+                    3       => 33,
+                    4       => 28,
+                    5       => 23,
+                    6       => 18,
+                    7       => 13,
+                    8       => 8,
+                    9       => 6,
                     10..=12 => 5,
                     13..=15 => 4,
                     16..=18 => 3,
                     19..=28 => 2,
-                    _ => 1,
+                    _       => 1,
                 };
             } else {
                 self.frames_till_drop -= 1;
@@ -364,11 +366,11 @@ impl<R: Read, W: Write> Game<R, W> {
         write!(self.stdout, "\r
      <! . . . . . . . . . .!>\r
      <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>      ROWS: 0\r
+     <! . . . . . . . . . .!>     LEVEL: 0\r
+     <! . . . . . . . . . .!>     SCORE: 0\r
      <! . . . . . . . . . .!>\r
-     <! . . . . . . . . . .!>\r
-     <! . . . . . . . . . .!>\r
-     <! . . . . . . . . . .!>\r
-     <! . . . . . . . . . .!>\r
+     <! . . . . . . . . . .!>    NEXT PIECE\r
      <! . . . . . . . . . .!>\r
      <! . . . . . . . . . .!>\r
      <! . . . . . . . . . .!>\r
@@ -385,19 +387,35 @@ impl<R: Read, W: Write> Game<R, W> {
      <!====================!>\r
        \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
 \r
-          SCORE: 0\r
-          LEVEL: 0\n\r").unwrap();
+\r
+\n\r").unwrap();
         //TODO: add stdout flush
         self.score = 0;
         self.last_board = [[false; 16]; 24];
         self.next_board = [[false; 16]; 24];
         self.running = true;
-        self.piece = self.new_piece();
+        self.next_piece = rand::thread_rng().gen_range(0..7);
+        self.new_piece();
         self.piece_board = self.piece.get_placement();
     }
     //make a new piece
-    fn new_piece(&self) -> Piece {
-        Piece::new(rand::thread_rng().gen_range(0..7))
+    fn new_piece(&mut self) {
+        self.piece = Piece::new(self.next_piece);
+        self.piece_board = self.piece.get_placement();
+        self.next_piece = rand::thread_rng().gen_range(0..7);
+        //reder next piece display
+        for y in 0..4 {
+            let y_pos: u16 = (y + 9) as u16; 
+            for x in 0..4 {
+                let block: &str = if self.piece.arr[self.next_piece][0][y][x] {"[]"} else {"  "};
+                let x_pos: u16 = ((x * 2) + 36) as u16;
+                match x {
+                    0 => write!(self.stdout, "{}{}", cursor::Goto(x_pos, y_pos), block).unwrap(),
+                    _ => write!(self.stdout, "{}", block).unwrap(),
+                } 
+            }
+        }
+        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 5), self.level).unwrap();
     }
     //return true if there is a collision
     //NOTE: using last_board
@@ -473,9 +491,16 @@ impl<R: Read, W: Write> Game<R, W> {
                 };
             }
         }
-        write!(self.stdout, "{}{}", termion::cursor::Goto(18, 25), self.score).unwrap();
-        write!(self.stdout, "{}{}", termion::cursor::Goto(18, 26), self.level).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 4), self.score).unwrap();
+        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 5), self.level).unwrap();
         self.stdout.flush().unwrap();
+    }
+    //print next piece
+    fn render_next_piece(&self) {
+        //TODO: print next piece under next piece to right of board
+        //add que for next piece shape number and make new pieces from that instead of random
+        //maybe update new_piece function to do this
+        //use this render function when a new piece is created
     }
     //move piece
     fn move_piece(&mut self, dir: Dir) {
@@ -522,8 +547,7 @@ impl<R: Read, W: Write> Game<R, W> {
             }
             //NOTE: is there supposed to be a 1 tick delay before the new piece shows up?
             //if there is there needs to be a new state for that
-            self.piece = Piece::new(rand::thread_rng().gen_range(0..7));
-            self.piece_board = self.piece.get_placement();
+            self.new_piece();
         }
     }
 }
