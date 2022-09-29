@@ -250,7 +250,7 @@ struct Game<R, W> {
 
 fn init() {
     let stdout = stdout();
-    let mut stdout = stdout.lock().into_raw_mode().unwrap();
+    let stdout = stdout.lock().into_raw_mode().unwrap();
     let stdin = async_stdin();
 
     let mut game = Game {
@@ -438,7 +438,7 @@ impl<R: Read, W: Write> Game<R, W> {
         let mut rows_removed: usize = 0;
         let mut x: usize;
         let mut remove: [bool; 21] = [false; 21];
-        for y in 0..21 {
+        for (y, row) in remove.iter_mut().enumerate() {
             //check if row is full
             full = true;
             x = 3;
@@ -450,15 +450,15 @@ impl<R: Read, W: Write> Game<R, W> {
             if full {
                 self.rows += 1;
                 rows_removed += 1;
-                remove[y] = true;
+                *row = true;
             }
         }
         //remove full rows
         if rows_removed > 0 {
             self.next_board = [[false; 16]; 24];
             let mut i: usize = 20;
-            for y in (0..21).rev() {
-                if !remove[y] {
+            for (y, row) in remove.iter().enumerate().rev() {
+                if !row {
                     self.next_board[i] = self.last_board[y];
                     i -= 1;
                 }
