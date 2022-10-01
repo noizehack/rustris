@@ -342,9 +342,9 @@ impl<R: Read, W: Write> Game<R, W> {
 
             if !self.update() {
                 self.render();
-                let stars = "**************";
-                let stars2 = "*            *";
-                let gameover = "* GAME  OVER *";
+                let stars = "************** ";
+                let stars2 = "*            * ";
+                let gameover = "* GAME  OVER * ";
                 write!(self.stdout, "{}{}", cursor::Goto(11, 9), stars).unwrap();
                 write!(self.stdout, "{}{}", cursor::Goto(11, 10), stars2).unwrap();
                 write!(self.stdout, "{}{}", cursor::Goto(11, 11), gameover).unwrap();
@@ -422,9 +422,9 @@ impl<R: Read, W: Write> Game<R, W> {
     //return true if there is a collision
     //NOTE: using last_board
     fn collides(&self) -> bool {
-        for y in 0..24 {
-            for x in 0..16 {
-                if self.piece_board[y][x] && (self.last_board[y][x] || self.border_board[y][x]) {
+        for (y, row) in self.piece_board.iter().enumerate() {
+            for (x, cell) in row.iter().enumerate() {
+                if *cell && (self.last_board[y][x] || self.border_board[y][x]) {
                     return true;
                 }
             }
