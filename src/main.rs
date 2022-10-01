@@ -15,6 +15,7 @@ enum Dir {
     Left,
     Right,
     Down,
+    Drop,
     Rcw,
     Rccw,
 }
@@ -481,6 +482,7 @@ impl<R: Read, W: Write> Game<R, W> {
             b'k' | b'w' | b'e' | b'v' => self.move_piece(Dir::Rcw),
             b'l' | b'd'               => self.move_piece(Dir::Right),
             b'i' | b'q' | b'c'        => self.move_piece(Dir::Rccw),
+            b' '                      => self.move_piece(Dir::Drop),
             b't'                      => return false,
             _ => {},
         };
@@ -512,6 +514,7 @@ impl<R: Read, W: Write> Game<R, W> {
             Dir::Left => if self.piece.x_pos > 1 {self.piece.x_pos -= 1} else {return},
             Dir::Right => if self.piece.x_pos < 15 {self.piece.x_pos += 1} else {return},
             Dir::Down => if self.piece.y_pos < 23 {self.piece.y_pos += 1} else {return},
+            Dir::Drop => for _ in 0..20 {self.move_piece(Dir::Down)},
             Dir::Rcw => if self.piece.rotation < 3 {self.piece.rotation += 1} else {self.piece.rotation = 0},
             Dir::Rccw => if self.piece.rotation > 0 {self.piece.rotation -= 1} else {self.piece.rotation = 3},
         }
@@ -521,6 +524,7 @@ impl<R: Read, W: Write> Game<R, W> {
                 Dir::Left => self.piece.x_pos += 1,
                 Dir::Right => self.piece.x_pos -= 1,
                 Dir::Down => self.piece.y_pos -= 1,
+                Dir::Drop => {},
                 Dir::Rcw => if self.piece.rotation > 0 {self.piece.rotation -= 1} else {self.piece.rotation = 3},
                 Dir::Rccw => if self.piece.rotation < 3 {self.piece.rotation += 1} else {self.piece.rotation = 0},
             }
