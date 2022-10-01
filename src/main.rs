@@ -386,10 +386,7 @@ impl<R: Read, W: Write> Game<R, W> {
      <! . . . . . . . . . .!>\r
      <! . . . . . . . . . .!>\r
      <!====================!>\r
-       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r
-\r
-\r
-\n\r").unwrap();
+       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r\r\r\n\r").unwrap();
         self.stdout.flush().unwrap();
         self.score = 0;
         self.rows = 0;
@@ -408,16 +405,12 @@ impl<R: Read, W: Write> Game<R, W> {
         //reder next piece display
         for y in 0..4 {
             let y_pos: u16 = (y + 9) as u16; 
+            let mut row_string = String::new();
             for x in 0..4 {
-                let block: &str = if self.piece.arr[self.next_piece][0][y][x] {"[]"} else {"  "};
-                let x_pos: u16 = ((x * 2) + 36) as u16;
-                match x {
-                    0 => write!(self.stdout, "{}{}", cursor::Goto(x_pos, y_pos), block).unwrap(),
-                    _ => write!(self.stdout, "{}", block).unwrap(),
-                } 
+                row_string += if self.piece.arr[self.next_piece][0][y][x] {"[]"} else {"  "};
             }
+            write!(self.stdout, "{}{}", cursor::Goto(36, y_pos), row_string).unwrap();
         }
-        write!(self.stdout, "{}{}", termion::cursor::Goto(42, 5), self.level).unwrap();
     }
     //return true if there is a collision
     //NOTE: using last_board
@@ -501,16 +494,12 @@ impl<R: Read, W: Write> Game<R, W> {
         //print new board
         write!(self.stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
         for y in (1..21).rev() {
+            let mut row_string = String::new();
             for x in 3..13 {
-                let block: &str = if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
-                let goto_y: u16 = (y + 1) as u16;
-                let goto_x: u16 = ((x - 3) * 2 + 8) as u16;
-                match x {
-                    3 => write!(self.stdout, "{}{}", termion::cursor::Goto(goto_x, goto_y), block).unwrap(),
-                    4..=12 => write!(self.stdout, "{}", block).unwrap(),
-                    _ => {},
-                };
+                row_string += if self.next_board[y][x] || self.piece_board[y][x] {"[]"} else {" ."};
             }
+            let goto_y: u16 = (y + 1) as u16;
+            write!(self.stdout, "{}{}", termion::cursor::Goto(8, goto_y), row_string).unwrap();
         }
         write!(self.stdout, "{}{}", termion::cursor::Goto(42, 4), self.rows).unwrap();
         write!(self.stdout, "{}{}", termion::cursor::Goto(42, 5), self.level).unwrap();
