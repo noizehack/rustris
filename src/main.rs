@@ -351,7 +351,7 @@ impl<R: Read, W: Write> Game<R, W> {
                 write!(self.stdout, "{}{}", cursor::Goto(11, 11), gameover).unwrap();
                 write!(self.stdout, "{}{}", cursor::Goto(11, 12), stars2).unwrap();
                 write!(self.stdout, "{}{}", cursor::Goto(11, 13), stars).unwrap();
-                write!(self.stdout, "{}{}", cursor::Goto(1, 28), cursor::Show).unwrap();
+                write!(self.stdout, "{}{}", cursor::Goto(1, 32), cursor::Show).unwrap();
                 return;
             }
             
@@ -387,7 +387,13 @@ impl<R: Read, W: Write> Game<R, W> {
      <! . . . . . . . . . .!>\r
      <! . . . . . . . . . .!>\r
      <!====================!>\r
-       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r\r\r\n\r").unwrap();
+       \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\r\r
+          ===CONTROLS===\r
+\r
+        MOVE         ROTATE\r
+      Left: H A     CW: K W E\r
+     Right: L D    CCW: I Q\r
+      Drop: Space   Quit: T\r\r\r").unwrap();
         self.stdout.flush().unwrap();
         self.score = 0;
         self.rows = 0;
