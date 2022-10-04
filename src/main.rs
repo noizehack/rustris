@@ -294,8 +294,8 @@ fn init() {
         rows: 0,
         score: 0,
         running: true,
-        stdin: stdin,
-        stdout: stdout,
+        stdin,
+        stdout,
     };
     game.start();
 }
